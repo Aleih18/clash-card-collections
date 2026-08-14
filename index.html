@@ -154,28 +154,36 @@
     position:relative;
     aspect-ratio:3/3.6;
     border-radius:12px;
+    cursor:pointer;
+    transition:transform .12s ease;
+    user-select:none;
+    /* overflow is intentionally visible here so the count badge below can hang off the edge */
+  }
+  .card:active{transform:scale(0.94);}
+  .card.owned:hover{transform:translateY(-2px);}
+
+  .card-inner{
+    position:relative;
+    width:100%;height:100%;
+    border-radius:12px;
     background:#141a24;
     border:2px solid #2a3342;
-    cursor:pointer;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:6px 4px;
-    transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
     filter:grayscale(0.85) brightness(0.7);
-    user-select:none;
     overflow:hidden;
     background-size:cover;
     background-position:center;
   }
-  .card:active{transform:scale(0.94);}
-  .card.owned{
+  .card.owned .card-inner{
     filter:none;
     border-color:var(--accent);
     box-shadow:0 0 0 1px var(--accent) inset, 0 6px 16px -6px var(--accent);
   }
-  .card.owned:hover{transform:translateY(-2px);}
   .card.has-img .card-mono{display:none;}
-  .card.has-img{background-color:#000;}
-  .card.has-img::after{
+  .card.has-img .card-inner{background-color:#000;}
+  .card.has-img .card-inner::after{
     content:"";position:absolute;inset:0;
     background:linear-gradient(180deg, transparent 45%, rgba(0,0,0,.85) 100%);
     pointer-events:none;
@@ -201,7 +209,7 @@
     position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
     background:#0e131c;border:1px solid var(--accent);color:var(--parchment);
     font-size:10px;font-weight:700;font-family:'Cinzel',serif;
-    padding:1px 6px;border-radius:8px;z-index:2;
+    padding:1px 6px;border-radius:8px;z-index:3;
   }
 
   .empty-msg{
@@ -386,14 +394,23 @@
       const hasImg = !!images[name];
       const card = document.createElement('div');
       card.className = 'card'+(owned?' owned':'')+(hasImg?' has-img':'');
-      if(hasImg){
-        card.style.backgroundImage = "url('"+images[name]+"')";
-      }
 
-      card.innerHTML =
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+      if(hasImg){
+        inner.style.backgroundImage = "url('"+images[name]+"')";
+      }
+      inner.innerHTML =
         '<div class="card-mono">'+mono(name)+'</div>'+
-        '<div class="card-name">'+name+'</div>'+
-        (count>1 ? '<div class="count-badge">x'+count+'</div>' : '');
+        '<div class="card-name">'+name+'</div>';
+      card.appendChild(inner);
+
+      if(count>1){
+        const badge = document.createElement('div');
+        badge.className = 'count-badge';
+        badge.textContent = 'x'+count;
+        card.appendChild(badge);
+      }
 
       card.addEventListener('click', ()=>{
         setCount(name, count+1);
