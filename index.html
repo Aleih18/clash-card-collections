@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Colección de Tropas</title>
+<title>Troop Collection</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -224,25 +224,25 @@
 <div class="wrap">
 
   <div class="banner">
-    <h1>Colección de Tropas</h1>
-    <p class="sub">Toca una carta para añadirla · toca de nuevo para sumar copias · clic derecho (o mantén pulsado) para restar</p>
+    <h1>Troop Collection</h1>
+    <p class="sub">Tap a card to add it · tap again to stack copies · right-click (or long-press) to remove one</p>
     <div class="progress-row">
       <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
       <div class="progress-count" id="progressCount">0 / 0</div>
     </div>
     <div class="controls">
       <div class="tabs" id="tabs">
-        <button class="tab active" data-filter="all">Todas</button>
-        <button class="tab" data-filter="owned">Obtenidas</button>
-        <button class="tab" data-filter="missing">Faltantes</button>
+        <button class="tab active" data-filter="all">All</button>
+        <button class="tab" data-filter="owned">Owned</button>
+        <button class="tab" data-filter="missing">Missing</button>
       </div>
-      <input class="search" id="search" type="text" placeholder="Buscar tropa…">
-      <button class="reset-btn" id="resetBtn">Reiniciar</button>
+      <input class="search" id="search" type="text" placeholder="Search troop…">
+      <button class="reset-btn" id="resetBtn">Reset</button>
     </div>
     <div class="export-row">
-      <input class="search" id="memberName" type="text" placeholder="Nombre del miembro (para la base de datos)" style="flex:1 1 220px;">
-      <button class="export-btn" id="exportJsonBtn">⬇ Exportar JSON</button>
-      <button class="export-btn" id="copyBtn">⧉ Copiar diccionario</button>
+      <input class="search" id="memberName" type="text" placeholder="Member name (for the database)" style="flex:1 1 220px;">
+      <button class="export-btn" id="exportJsonBtn">⬇ Export JSON</button>
+      <button class="export-btn" id="copyBtn">⧉ Copy dictionary</button>
     </div>
   </div>
 
@@ -250,13 +250,13 @@
 
   <div class="export-preview" id="exportPreview" style="display:none;">
     <div class="export-preview-head">
-      <span>Vista previa del diccionario</span>
+      <span>Dictionary preview</span>
       <button class="close-preview" id="closePreview">✕</button>
     </div>
     <textarea id="exportText" readonly spellcheck="false"></textarea>
   </div>
 
-  <p class="footer-note" id="statusNote">Cargando inventario…</p>
+  <p class="footer-note" id="statusNote">Loading inventory…</p>
 </div>
 
 
@@ -327,10 +327,10 @@
         ALL_NAMES.forEach(n=>{ if(typeof parsed[n]==='number') inventory[n]=parsed[n]; });
       }
     }catch(e){}
-    document.getElementById('statusNote').textContent = 'Cargando imágenes…';
+    document.getElementById('statusNote').textContent = 'Loading images…';
     render();
     await loadImages();
-    document.getElementById('statusNote').textContent = 'Tu progreso se guarda automáticamente en este navegador.';
+    document.getElementById('statusNote').textContent = 'Your progress is saved automatically in this browser.';
     render();
   }
 
@@ -339,7 +339,7 @@
     if(saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(()=>{
       try{ localStorage.setItem(INV_KEY, JSON.stringify(inventory)); }
-      catch(e){ document.getElementById('statusNote').textContent = 'No se pudo guardar el progreso.'; }
+      catch(e){ document.getElementById('statusNote').textContent = 'Could not save progress.'; }
     }, 250);
   }
 
@@ -372,7 +372,7 @@
     if(visibleCards.length===0){
       const msg = document.createElement('div');
       msg.className='empty-msg';
-      msg.textContent = 'No hay cartas que coincidan con el filtro.';
+      msg.textContent = 'No cards match this filter.';
       tiersEl.appendChild(msg);
       return;
     }
@@ -425,28 +425,28 @@
   });
 
   document.getElementById('resetBtn').addEventListener('click', ()=>{
-    if(!confirm('¿Reiniciar todo el inventario a cero?')) return;
+    if(!confirm('Reset the whole inventory to zero?')) return;
     ALL_NAMES.forEach(n=>inventory[n]=0);
     persistInventory();
     render();
   });
 
   function sanitizeFileName(str){
-    return (str||'miembro').trim().replace(/[^a-z0-9_\-]+/gi,'_').replace(/^_+|_+$/g,'') || 'miembro';
+    return (str||'member').trim().replace(/[^a-z0-9_\-]+/gi,'_').replace(/^_+|_+$/g,'') || 'member';
   }
 
   function buildExportObject(){
     const name = document.getElementById('memberName').value.trim();
     return {
-      miembro: name || null,
-      fecha: new Date().toISOString(),
-      inventario: inventory
+      member: name || null,
+      date: new Date().toISOString(),
+      inventory: inventory
     };
   }
 
   function pythonDictText(){
     const lines = ALL_NAMES.map(n=>"    '"+n.replace(/'/g,"\\'")+"': "+inventory[n]+",");
-    return "inventario = {\n"+lines.join('\n')+"\n}";
+    return "inventory = {\n"+lines.join('\n')+"\n}";
   }
 
   function showPreview(text){
@@ -471,7 +471,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = sanitizeFileName(document.getElementById('memberName').value)+'_inventario.json';
+      a.download = sanitizeFileName(document.getElementById('memberName').value)+'_inventory.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -486,9 +486,9 @@
     const btn = document.getElementById('copyBtn');
     try{
       await navigator.clipboard.writeText(text);
-      btn.textContent = '✓ Copiado';
+      btn.textContent = '✓ Copied';
       btn.classList.add('copied');
-      setTimeout(()=>{ btn.textContent='⧉ Copiar diccionario'; btn.classList.remove('copied'); }, 1600);
+      setTimeout(()=>{ btn.textContent='⧉ Copy dictionary'; btn.classList.remove('copied'); }, 1600);
     }catch(e){
       showPreview(text);
     }
