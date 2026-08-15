@@ -123,6 +123,10 @@
   }
   .export-btn:hover{background:#1b2a20;}
   .export-btn.copied{background:var(--ok);color:#0b0e14;border-color:var(--ok);}
+  .import-btn{
+    border:1px solid #3a3f52;background:#141826;color:#a9b8f0;
+  }
+  .import-btn:hover{background:#1a2033;}
 
   .export-preview{
     background:#0e131c;border:1px solid #2c3648;border-radius:12px;
@@ -249,6 +253,8 @@
     </div>
     <div class="export-row">
       <input class="search" id="memberName" type="text" placeholder="Member name (for the database)" style="flex:1 1 220px;">
+      <button class="export-btn import-btn" id="importJsonBtn">⬆ Import JSON</button>
+      <input type="file" id="importJsonInput" accept="application/json,.json" style="display:none;">
       <button class="export-btn" id="exportJsonBtn">⬇ Export JSON</button>
       <button class="export-btn" id="copyBtn">⧉ Copy dictionary</button>
     </div>
@@ -478,6 +484,53 @@
 
   document.getElementById('closePreview').addEventListener('click', ()=>{
     document.getElementById('exportPreview').style.display='none';
+  });
+
+  document.getElementById('importJsonBtn').addEventListener('click', ()=>{
+    document.getElementById('importJsonInput').click();
+  });
+
+  document.getElementById('importJsonInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        const importedInventory = data.inventory || data; // allow raw {name: count} too
+
+        if(typeof importedInventory !== 'object' || importedInventory === null){
+          throw new Error('No inventory found in this file.');
+        }
+
+        const unknown = Object.keys(importedInventory).filter(n=>!ALL_NAMES.includes(n));
+        const missing = ALL_NAMES.filter(n=>!(n in importedInventory));
+
+        ALL_NAMES.forEach(n=>{
+          const val = importedInventory[n];
+          inventory[n] = (typeof val === 'number' && isFinite(val)) ? Math.max(0, Math.min(MAX_COPIES, Math.round(val))) : 0;
+        });
+
+        if(data.member){
+          document.getElementById('memberName').value = data.member;
+        }
+
+        persistInventory();
+        render();
+
+        let note = 'Imported'+(data.member ? ' "'+data.member+'"' : '')+' successfully.';
+        if(missing.length) note += ' '+missing.length+' card(s) not in the file were set to 0.';
+        if(unknown.length) note += ' '+unknown.length+' unknown card(s) in the file were ignored.';
+        document.getElementById('statusNote').textContent = note;
+      }catch(err){
+        alert('Could not import this file: '+err.message);
+      }finally{
+        e.target.value = ''; // allow re-selecting the same file later
+      }
+    };
+    reader.onerror = ()=>{ alert('Could not read this file.'); };
+    reader.readAsText(file);
   });
 
   document.getElementById('exportJsonBtn').addEventListener('click', ()=>{
